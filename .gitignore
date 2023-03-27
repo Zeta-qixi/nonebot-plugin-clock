@@ -1,0 +1,12 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+MANIFEST.in
+*.egg-info/
+
+
+dist/
+test.py
+test.ipynb
+.vscode/settings.json
