@@ -2,8 +2,8 @@
 
 ## 配置文件设置
 ```
-CLOCK_WHITE_LIST = [qq_id1, qq_id2, ...] # 启用后只允许白名单在群内设置闹钟
-CLOCK_BLACK_LIST = [qq_id] # 启用后不允许白名单在群内设置闹钟
+CLOCK_WHITE_LIST = [qq_id1, qq_id2, ...] # 启用后只允许白名单在群聊设置闹钟
+CLOCK_BLACK_LIST = [qq_id] # 启用后只拒绝黑名单在群聊设置闹钟
 ```
 
 ## __使用__
