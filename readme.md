@@ -2,9 +2,14 @@
 
 ## 配置文件设置
 ```
-CLOCK_WHITE_LIST = [qq_id1, qq_id2, ...] # 启用后只允许白名单在群聊设置闹钟
-CLOCK_BLACK_LIST = [qq_id] # 启用后只拒绝黑名单在群聊设置闹钟
+CLOCK_WHITE_LIST = [qq_id1, qq_id2, ...] 
+CLOCK_BLACK_LIST = [qq_id] 
 ```
+判定逻辑:
+1. superuser 永远为`True`
+2. 判定黑名单 启用后 用户在黑名单中直接返回`False`（高于 管理员 群主 权限）
+3. 判定白名单 启用后 普通群员不在白名单中返回`False`（低于 管理员 群主 权限）
+
 
 ## __使用__
 
@@ -41,3 +46,6 @@ user : [types]
 ```
 
 
+
+## 更新
+- 2023.4.12  优化⏰ [issues 1](https://github.com/Zeta-qixi/nonebot-plugin-clock/issues/1)
