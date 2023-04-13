@@ -61,7 +61,14 @@ def add_clock(**kwargs):
     create_clock_scheduler(clock)
 
 def del_clock(id: int, uid: int):
-    """删除闹钟"""
+    """
+    删除闹钟 防止用户误删
+    Args:
+        id(int): database中的clock id (唯一)
+        uid(int): user_id 或 group_id
+    Returns:
+        bool
+    """
     if db.del_clock(id, uid):
         del(CLOCK_DATA[id])
         scheduler.remove_job(f"clock_{id}")
@@ -70,6 +77,14 @@ def del_clock(id: int, uid: int):
 
 
 def get_time(time_):
+    """
+    获取指定时间字符串的标准化时间格式
+    Args:
+        time_ (str): 输入的时间字符串，可以为 "+2H30M"（表示2小时30分钟后的时间） 或 "13:45"（指定的具体时间）
+    
+    Returns:
+        str: 标准化的时间格式字符串，例如 "13:45"
+    """
     t = None
     r = re.match(r'(\d+)[:|\-|：|.](\d+)',time_)
     if time_.startswith('+'):
