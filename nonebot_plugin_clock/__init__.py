@@ -44,7 +44,7 @@ def create_clock_scheduler(clock):
             await get_bot().send_msg(message_type=clock.type, user_id=clock.user, group_id=clock.user, message=clock.content)          
 
             if clock.ones == 1:
-                del_clock(clock.id)
+                del_clock(clock.id, clock.user)
 
     scheduler.add_job(add_clock, "cron", hour=clock.hour, minute=clock.minute, id=f"clock_{clock.id}")
 
@@ -60,12 +60,12 @@ def add_clock(**kwargs):
     db.add_clock(clock)
     create_clock_scheduler(clock)
 
-def del_clock(id: int):
+def del_clock(id: int, uid: int):
     """删除闹钟"""
-    del(CLOCK_DATA[id])
-    db.del_clock(id)
-    scheduler.remove_job(f"clock_{id}")
-    return True
+    if db.del_clock(id, uid):
+        del(CLOCK_DATA[id])
+        scheduler.remove_job(f"clock_{id}")
+        return True
 
 
 
@@ -196,11 +196,11 @@ del_ = on_command('删除闹钟', block=True)
 @del_.handle()
 async def del_handle(bot: Bot, event: Event, id = CommandArg()):
     id = int(str(id))
-    if id in CLOCK_DATA:
-        del_clock(id)
+    uid = event.group_id if 'group' in event.get_event_name() else event.user_id 
+    if del_clock(id, uid):
         await del_.finish(message='删除成功')
     else:
-        await del_.finish(message='没有这个id')
+        await del_.finish(message='不存在的id')
     await del_.finish(message='失败了')
 
 

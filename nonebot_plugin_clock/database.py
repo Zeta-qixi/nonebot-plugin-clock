@@ -1,7 +1,7 @@
 
 import os
 import sqlite3
-from Clock import Clock
+from .Clock import Clock
 
 TABLE = "CLOCKS"
 db_ = os.path.dirname(__file__) + '/data.sqlite'
@@ -53,8 +53,9 @@ class DB:
         values ("{clock.type}", {clock.user}, "{clock.content}","{clock.month}","{clock.day}","{clock.week}","{clock.time}",{clock.ones});'''
         self.execute(sql)
 
-    def del_clock(self, id):
-        self.execute(f"DELETE from {self.table} where id = {id}")
+    def del_clock(self, id: int, user: int):
+        if self.execute(f"DELETE from {self.table} where id = {id} and user = {user}"):
+            return self.execute(f"DELETE from {self.table} where id = {id}")
 
     def select_all(self):
         '''

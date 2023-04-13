@@ -48,4 +48,5 @@ user : [types]
 
 
 ## 更新
-- 2023.4.12  优化⏰ [issues 1](https://github.com/Zeta-qixi/nonebot-plugin-clock/issues/1)
+- 2023.4.12  优化⏰ [issues #1](https://github.com/Zeta-qixi/nonebot-plugin-clock/issues/1)
+- 2023.4.13  优化⏰ [issues #1](https://github.com/Zeta-qixi/nonebot-plugin-clock/issues/1) 优化⏰ [issues #2](https://github.com/Zeta-qixi/nonebot-plugin-clock/issues/2)
