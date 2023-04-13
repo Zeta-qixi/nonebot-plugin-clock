@@ -54,8 +54,9 @@ class DB:
         self.execute(sql)
 
     def del_clock(self, id: int, user: int):
-        if self.execute(f"DELETE from {self.table} where id = {id} and user = {user}"):
-            return self.execute(f"DELETE from {self.table} where id = {id}")
+        if self.execute(f"SELECT id FROM {self.table} where id = {id} and user = {user}"):
+            self.execute(f"DELETE from {self.table} where id = {id}")
+            return True
 
     def select_all(self):
         '''
