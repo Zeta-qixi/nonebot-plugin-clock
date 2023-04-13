@@ -2,7 +2,7 @@ import re
 
 from datetime import datetime, timedelta
 from nonebot.permission import SUPERUSER
-from nonebot import on_command, get_bot, get_driver
+from nonebot import on_command, on_regex ,get_bot, get_driver
 from nonebot.adapters.onebot.v11.bot import Bot
 from nonebot.adapters.onebot.v11.event import Event
 from nonebot.adapters.onebot.v11.message import Message, MessageSegment
@@ -176,9 +176,9 @@ async def _(bot: Bot, event: Event, state: T_State):
 
 
 # # 查看闹钟
-check = on_command('查看闹钟',  aliases={'提醒事项', '闹钟','⏰'}, block=True)
+check = on_regex("^(查看闹钟|提醒事项|闹钟|⏰)$" ,block=True)
 @check.handle()
-async def add_handle(bot: Bot, event: Event):
+async def _(bot: Bot, event: Event):
 
     uid = event.group_id if 'group' in event.get_event_name() else event.user_id 
 
@@ -209,16 +209,16 @@ async def add_handle(bot: Bot, event: Event):
 # 删除闹钟
 del_ = on_command('删除闹钟', block=True)
 @del_.handle()
-async def del_handle(bot: Bot, event: Event, id = CommandArg()):
-    id = int(str(id))
-    uid = event.group_id if 'group' in event.get_event_name() else event.user_id 
-    if del_clock(id, uid):
-        await del_.finish(message='删除成功')
-    else:
-        await del_.finish(message='不存在的id')
-    await del_.finish(message='失败了')
-
-
-
-
-
+async def _(bot: Bot, event: Event, ids = CommandArg()):
+    ids = str(ids).split()
+    
+    if ids:
+        uid = event.group_id if 'group' in event.get_event_name() else event.user_id 
+        task = [[],[]]
+        for id in ids:
+            id = int(id)
+            if del_clock(id, uid):
+                task[0].append(id) # succeed
+            else:
+                task[1].append(id) # fail
+        await del_.finish(message=f'删除闹钟{task[0]}\n不存在的id{task[1]}')
