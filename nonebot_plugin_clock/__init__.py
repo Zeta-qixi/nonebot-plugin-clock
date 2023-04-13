@@ -108,9 +108,8 @@ def get_time(time_):
 add_clock_qq = on_command('添加闹钟', aliases={'设置闹钟',})
 @add_clock_qq.handle()
 async def _(bot: Bot, event: Event, state: T_State, messages: Message = CommandArg()):
-
+    
     messages = str(messages).split(' ', 1)
-    content = ''
 
     if len(messages) < 2:
         await add_clock_qq.finish(message="添加格式为: “添加闹钟 时间 内容”")
@@ -119,17 +118,10 @@ async def _(bot: Bot, event: Event, state: T_State, messages: Message = CommandA
     if not time_:
         await add_clock_qq.finish(message="时间格式错误")
 
-    for msg in Message(messages[1]):
-        if url:=msg.data.get("url"):
-            content += str(MessageSegment(msg.type, {"file":url}))
-        else:
-            content += str(msg)
-
-
     state['time'] = time_
     state['type'] = 'private'
     state['user'] = event.user_id
-    state['content'] = content if content else '⏰'
+    state['content'] = messages[1] if messages[1] else '⏰'
 
     if 'group' in event.get_event_name():
         res1 = await SUPERUSER(bot, event)
@@ -221,4 +213,4 @@ async def _(bot: Bot, event: Event, ids = CommandArg()):
                 task[0].append(id) # succeed
             else:
                 task[1].append(id) # fail
-        await del_.finish(message=f'删除闹钟{task[0]}\n不存在的id{task[1]}')
+        await del_.finish(message=f'删除闹钟{task[0]}'+ f'\n不存在的id{task[1]}' if task[1] else '')
