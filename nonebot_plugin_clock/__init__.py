@@ -15,8 +15,8 @@ from .Clock import Clock
 
 scheduler = require('nonebot_plugin_apscheduler').scheduler
 
-WHITELIST = getattr(get_driver().config, 'CLOCK_WHITE_LIST', [])
-BLACKLIST = getattr(get_driver().config, 'CLOCK_BLACK_LIST', [])
+WHITELIST = getattr(get_driver().config, 'clock_white_list', [])
+BLACKLIST = getattr(get_driver().config, 'clock_black_list', [])
 CLOCK_DATA = {}
 
 async def CLOCK_RULE(event: Event) -> bool:
