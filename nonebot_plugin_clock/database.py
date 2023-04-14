@@ -49,8 +49,8 @@ class DB:
 
 
     def add_clock(self, clock: Clock):
-        sql = f'''INSERT INTO {self.table} (type, user, content, month, day, week, c_time, ones)
-        values ("{clock.type}", {clock.user}, "{clock.content}","{clock.month}","{clock.day}","{clock.week}","{clock.time}",{clock.ones});'''
+        sql = f'''INSERT INTO {self.table} (id, type, user, content, month, day, week, c_time, ones)
+        values ({clock.id}, "{clock.type}", {clock.user}, "{clock.content}","{clock.month}","{clock.day}","{clock.week}","{clock.time}",{clock.ones});'''
         self.execute(sql)
 
     def del_clock(self, id: int, user: int):
