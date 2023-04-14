@@ -1,11 +1,12 @@
-
 import os
 import sqlite3
+from nonebot.log import logger
+
 from .Clock import Clock
 
 TABLE = "CLOCKS"
 db_ = os.path.dirname(__file__) + '/data.sqlite'
-
+logger.info(f"CLOCK DB: {db_}")
 
 if not os.path.exists(db_):
     
@@ -24,9 +25,9 @@ if not os.path.exists(db_):
             c_time TIME,
             ones INTEGER NOT NULL);
         ''')
-        print('create db')
+        logger.info('create db')
     except:
-        print('create db fail ...')
+        logger.info('create db fail ...')
 
     conn.commit()
     conn.close()
