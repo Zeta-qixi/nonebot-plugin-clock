@@ -2,13 +2,15 @@ import re
 
 from datetime import datetime, timedelta
 from nonebot.permission import SUPERUSER
-from nonebot import on_command, on_regex ,get_bot, get_driver
-from nonebot.adapters.onebot.v11.bot import Bot
-from nonebot.adapters.onebot.v11.event import Event
-from nonebot.adapters.onebot.v11.message import Message, MessageSegment
-from nonebot.params import CommandArg
+from nonebot import on_command, on_regex ,get_bot, get_driver, require
 from nonebot.typing import T_State
-from nonebot import require
+from nonebot.matcher import Matcher
+from nonebot.params import CommandArg
+from nonebot.adapters.onebot.v11.bot import Bot
+from nonebot.adapters.onebot.v11 import MessageEvent, GroupMessageEvent, Message
+
+
+
 
 from .database import db
 from .Clock import Clock
@@ -19,8 +21,15 @@ WHITELIST = getattr(get_driver().config, 'clock_white_list', [])
 BLACKLIST = getattr(get_driver().config, 'clock_black_list', [])
 CLOCK_DATA = {}
 
-async def CLOCK_RULE(event: Event) -> bool:
+
+del_clock_qq = on_command('删除闹钟', block=True)
+add_clock_qq = on_command('添加闹钟', aliases={'设置闹钟',}, block=True)
+
+async def CLOCK_RULE(bot: Bot, event: MessageEvent) -> bool:
     
+    ret = await SUPERUSER(bot, event)
+    if ret: return True
+
     # 黑名单优先判定
     if BLACKLIST:
         return event.user_id not in BLACKLIST
@@ -31,7 +40,11 @@ async def CLOCK_RULE(event: Event) -> bool:
         
     return True
 
-
+def get_event_info( event: MessageEvent ):
+    if isinstance(event, GroupMessageEvent):
+        return ('group', event.group_id)
+    else:
+        return ('private', event.user_id)
 
 def create_clock_scheduler(clock):
     '''
@@ -105,40 +118,35 @@ def get_time(time_):
         
 
 # 创建闹钟
-add_clock_qq = on_command('添加闹钟', aliases={'设置闹钟',})
 @add_clock_qq.handle()
-async def _(bot: Bot, event: Event, state: T_State, messages: Message = CommandArg()):
+async def _(matcher: Matcher, bot: Bot, event: MessageEvent, state: T_State, messages: Message = CommandArg()):
     
     messages = str(messages).split(' ', 1)
 
     if len(messages) < 2:
-        await add_clock_qq.finish(message="添加格式为: “添加闹钟 时间 内容”")
+        await matcher.finish(message="添加格式为: “添加闹钟 时间 内容”")
 
     time_ = get_time(messages[0])
     if not time_:
-        await add_clock_qq.finish(message="时间格式错误")
+        await matcher.finish(message="时间格式错误")
 
     state['time'] = time_
-    state['type'] = 'private'
-    state['user'] = event.user_id
+    state['type'], state['user'] = get_event_info(event)
     state['content'] = messages[1] if messages[1] else '⏰'
 
-    if 'group' in event.get_event_name():
-        res1 = await SUPERUSER(bot, event)
-        res2 = await CLOCK_RULE(event)
-        if not (res1 or res2):
-            await add_clock_qq.finish(message="你没有该权限哦～")
-        state['type'] = 'group'
-        state['user'] = event.group_id
+    if state['type'] == 'group':
 
-    
+        ret = await CLOCK_RULE(bot, event)
+        if not ret:
+            await matcher.finish(message="你没有该权限哦～")
 
 
-@add_clock_qq.got('ones', prompt="⏰不重复, 设置为每日输入[Y/y]\n设置周几 如周一周三输入[13]\n设置某天，如圣诞输入 [12.25]")
-async def _(bot: Bot, event: Event, state: T_State):
+
+@add_clock_qq.got('ones', prompt="⏰设置不重复输入[N/n]\n⏰设置为每日输入[Y/y]\n⏰设置周几 如周一周三输入[13]\n⏰设置某天，如圣诞输入 [12.25]")
+async def _(matcher: Matcher, state: T_State):
 
     state['ones'] = str(state['ones'])
-    ones = 0 if state['ones'] in ['Y', 'y'] else 1
+    ones = 0 if state['ones'] in ['Y', 'y'] else 1 # Y,y之外的非数字 都设置一次性
     month, day = 0, 0
     week = ''
 
@@ -162,7 +170,7 @@ async def _(bot: Bot, event: Event, state: T_State):
        
     add_clock(**data)
     ones_ = {1:'不重复', 0:'重复'}
-    await add_clock_qq.finish(message=f"[{ones_[ones]}]添加成功～")
+    await matcher.finish(message=f"[{ones_[ones]}]添加成功～")
 
 
 
@@ -170,11 +178,9 @@ async def _(bot: Bot, event: Event, state: T_State):
 # # 查看闹钟
 check = on_regex("^(查看闹钟|提醒事项|闹钟|⏰)$" ,block=True)
 @check.handle()
-async def _(bot: Bot, event: Event):
+async def _(matcher: Matcher, event: MessageEvent):
 
-    uid = event.group_id if 'group' in event.get_event_name() else event.user_id 
-
-
+    _, uid = get_event_info(event)
     def check_(msg: str) -> str:
 
         message = ""
@@ -192,25 +198,23 @@ async def _(bot: Bot, event: Event):
             clock_msg.append(check_(clock.get_info()))
 
     if clock_msg:
-        await bot.send(event, message= Message('\n'.join(clock_msg)))
+        await matcher.finish(message= Message('\n'.join(clock_msg)))
     else:
-        await bot.send(event, message='目前没有闹钟')
+        await matcher.finish(message='目前没有闹钟')
     
 
 
 # 删除闹钟
-del_ = on_command('删除闹钟', block=True)
-@del_.handle()
-async def _(bot: Bot, event: Event, ids = CommandArg()):
-    ids = str(ids).split()
-    
-    if ids:
-        uid = event.group_id if 'group' in event.get_event_name() else event.user_id 
-        task = [[],[]]
-        for id in ids:
-            id = int(id)
-            if del_clock(id, uid):
-                task[0].append(id) # succeed
-            else:
-                task[1].append(id) # fail
-        await del_.finish(message=f'删除闹钟{task[0]}'+ f'\n不存在的id{task[1]}' if task[1] else '')
+@del_clock_qq.handle()
+async def _(matcher: Matcher, event: MessageEvent, ids = CommandArg()):
+
+    _, uid = get_event_info(event)
+    task = [[],[]]
+
+    for id in str(ids).split():
+        id = int(id)
+        if del_clock(id, uid):
+            task[0].append(id) # succeed
+        else:
+            task[1].append(id) # fail
+    await matcher.finish(message=f'删除闹钟{task[0]}'+ f'\n不存在的id{task[1]}' if task[1] else '')
