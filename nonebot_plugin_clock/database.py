@@ -69,7 +69,7 @@ class DB:
         
     def new_id(self):
         res = self.execute(f"SELECT max(id) FROM {self.table};")
-        return res[0][0] + 1 if res[0][0] else 0
+        return res[0][0] + 1 if res[0][0] else 1
 
 
 db = DB(db_, TABLE)
