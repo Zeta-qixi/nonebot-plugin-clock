@@ -1,5 +1,6 @@
 # ⏰ | 提醒事项  支持群聊或私聊
 
+## 已发布[频道版本](https://github.com/Zeta-qixi/nonebot-plugin-clock/tree/qqguild)
 ## 配置文件设置
 ```
 CLOCK_WHITE_LIST = [qq_id1, qq_id2, ...] 
