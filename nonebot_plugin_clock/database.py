@@ -1,11 +1,13 @@
 import os
 import sqlite3
 from nonebot.log import logger
-
-from .Clock import Clock
+from pathlib import Path
 
 TABLE = "CLOCKS"
-db_ = os.path.dirname(__file__) + '/data.sqlite'
+path = Path('./static/clocks')
+if not os.path.exists(path):
+    os.mkdir(path)
+db_ = path.joinpath('data.sqlite')
 logger.info(f"CLOCK DB: {db_}")
 
 if not os.path.exists(db_):
@@ -17,7 +19,8 @@ if not os.path.exists(db_):
         c.execute(f'''CREATE TABLE {TABLE}(  
             id INTEGER NOT NULL primary key autoincrement,
             type CHAR(10),
-            user INTEGER NOT NULL,
+            group_id VARCHAR(20),
+            user_id VARCHAR(20) NOT NULL,
             content VARCHAR(20),
             month INTEGER,
             day INTEGER,
@@ -26,8 +29,9 @@ if not os.path.exists(db_):
             ones INTEGER NOT NULL);
         ''')
         logger.info('create db')
-    except:
-        logger.info('create db fail ...')
+    except Exception as e:
+        logger.error(repr(e))
+        logger.error('create db fail ...')
 
     conn.commit()
     conn.close()
@@ -49,22 +53,26 @@ class DB:
         return res
 
 
-    def add_clock(self, clock: Clock):
-        sql = f'''INSERT INTO {self.table} (id, type, user, content, month, day, week, c_time, ones)
-        values ({clock.id}, "{clock.type}", {clock.user}, "{clock.content}","{clock.month}","{clock.day}","{clock.week}","{clock.time}",{clock.ones});'''
+    def add_clock(self, clock):
+        sql = f'''INSERT INTO {self.table} (id, type, group_id, user_id, content, month, day, week, c_time, ones)
+        values ({clock.id}, "{clock.type}", "{clock.group_id}", {clock.user_id}, "{clock.content}","{clock.month}","{clock.day}","{clock.week}","{clock.time}",{clock.ones});'''
         self.execute(sql)
 
-    def del_clock(self, id: int, user: int):
-        if self.execute(f"SELECT id FROM {self.table} where id = {id} and user = {user}"):
-            self.execute(f"DELETE from {self.table} where id = {id}")
-            return True
+
+    def del_clock(self, id: int):  
+        self.execute(f"DELETE from {self.table} where id = {id}")
+        return True
+
 
     def select_all(self):
         '''
-        (id, type, user, content, c_time, ones) 
+        (id, type, user_id, content, c_time, ones) 
         '''
-        #DataFrame(data = data, columns=['id', 'type', 'uid', 'note', 'time', 'omes'])
         return self.execute(f"SELECT * FROM {self.table};")
+    
+
+    def select_by_user(self, id, gid, uid):
+        return self.execute(f"SELECT * FROM {self.table} where id = {id} and group_id = {gid} adn user_id = {uid};")
 
         
     def new_id(self):

@@ -1,14 +1,10 @@
-# ⏰ | 提醒事项  支持群聊或私聊
+# ⏰ | 提醒事项(频道版)  支持群聊、频道私聊
 
-## 配置文件设置
-```
-CLOCK_WHITE_LIST = [qq_id1, qq_id2, ...] 
-CLOCK_BLACK_LIST = [qq_id] 
-```
-判定逻辑:
-1. superuser 永远为`True`
-2. 判定黑名单 启用后 用户在黑名单中直接返回`False`（高于 管理员 群主 权限）
-3. 判定白名单 启用后 普通群员不在白名单中返回`False`（低于 管理员 群主 权限）
+
+## 修改⚠️
+- 数据库新增字段 `group`  
+- 移除黑白名单
+
 
 
 ## __使用__
@@ -48,5 +44,4 @@ user : [types]
 
 
 ## 更新
-- 2023.4.12  优化⏰ [issues #1](https://github.com/Zeta-qixi/nonebot-plugin-clock/issues/1)
-- 2023.4.13  优化⏰ [issues #1](https://github.com/Zeta-qixi/nonebot-plugin-clock/issues/1) 优化⏰ [issues #2](https://github.com/Zeta-qixi/nonebot-plugin-clock/issues/2)
+- 2023.12.12 频道版本
