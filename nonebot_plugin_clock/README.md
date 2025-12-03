@@ -17,33 +17,56 @@
   - 删除指定提醒
 
 ## 📦 安装流程
+
+#### pip
+1. 安装插件到环境
+```
+pip install nonebot-plugin-clock
+```
+
+2. 添加到 pyproject.toml
+
+```
+plugins = ["nonebot_plugin_clock"]
+```
+
+#### 使用仓库
 1. 安装基础依赖
 ```bash
 pip install nonebot2 nonebot-adapter-onebot
-pip install nonebot-anywhere-llm
 pip install nonebot-plugin-apscheduler
 ```
 
 2. 项目clone到NoneBot插件目录
 ```python
-# bot.py
 cd src
 git@github.com:Zeta-qixi/nonebot-plugin-clock.git
 ```
 
+## 🎲 .env.dev配置
+`.env.dev`
+```.env
+group_at_me = True
+use_llm = False
 ```
-pip install nonebot-plugin-clock
-```
+- group_at_me  
+[bool] 群聊是否@发起者，默认True  
+- use_llm   
+[bool] 是否使用llm，默认False (无效设置,该版本不使用LLM)
+
 
 ## 🎮 使用手册
 
 ### ⏰ 设置提醒
-#### 方式一：自然语言（推荐）
+#### 方式一：自然语言
 直接发送：
 `每天上午8点叫我起床`
 `每周五16:00提醒我提交周报`
 
+_该方法默认使用正则表达式，对于复杂指令无法识别；llm测试复杂指令检查成功率>95%, 至少要使用32b模型_
+
 #### 方式二：快捷命令
+`添加闹钟` `添加提醒` `添加临时闹钟` `添加临时提醒` + `TIME`
 ```bash
 /添加闹钟 21:00
 ↓ 机器人响应
@@ -53,21 +76,25 @@ pip install nonebot-plugin-clock
 添加成功～
 ```
 
+_使用`临时`字段为一次性设置_
+
 **时间参数格式：**
 - 基准时间 `12:00`
 - 日期时间 `12.25 9:30` (12月25日9:30)
 - 倒计时 `+30m` (30分钟后)
-- 周期提醒 `* * * * *` (cron表达式)
+- cron表达式 `* * * * *` (5位)
 
 ### 📋 查看提醒
-触发词：`查看闹钟` `提醒事项` `闹钟` ⏰  
-格式：
+`查看闹钟` `提醒事项` `闹钟` ⏰  
+
+返回格式：
 ```
-1. [每日] 21:00 记得喝水哦~
-2. [单次] 2023-12-25 09:30 圣诞聚会
+1. [每日] 21:00 记得喝水哦~ 
+2. [单次] 2023-12-25 09:30 圣诞聚会 （仅一次）
 ```
 
 ### 🗑 删除提醒
+`删除闹钟` `删除提醒`
 ```bash
 /删除闹钟 2
 ↓ 结果
@@ -94,17 +121,5 @@ pip install nonebot-plugin-clock
 用户：每周三14:30提醒技术部开会
 机器人：明白啦，到时会准时提醒大家
 ```
-
-## ⚠ 注意事项
-1. 图片/表情等多媒体内容需在设置内容步骤发送
-2. 索引编号以当前查询列表为准
-3. "+"开头的时间为单次提醒(如+3h)
-4. 默认时间格式为每日重复提醒
-
-## 🛠 故障排查
-若出现异常提示，请检查：
-1. 时间格式是否符合要求
-2. 机器人账号是否具有群聊发言权限
-3. 数据库写入权限设置
 
 ---

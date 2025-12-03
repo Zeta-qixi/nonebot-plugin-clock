@@ -10,7 +10,7 @@ from .utils import (get_event_info, simple_time_to_cron,
                     message_to_db)
 
 check = on_regex("^(查看闹钟|提醒事项|闹钟|⏰)$" ,block=True) 
-del_clock_qq = on_command('删除闹钟', block=True) 
+del_clock_qq = on_command('删除闹钟', aliases={"删除提醒"}, block=True) 
 add_clock_qq = on_command('添加闹钟',  aliases={"添加提醒", "添加临时闹钟", "添加临时提醒"}, block=True) 
 enabled_clock_qq = on_command('开启闹钟', aliases={'开启提醒',}, block=True) 
 disabled_clock_qq = on_command('关闭闹钟', aliases={'关闭提醒',}, block=True)
