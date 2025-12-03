@@ -3,7 +3,7 @@ from .model import Clock
 from .scheduler import SchedulerAdapter
 from .database.database import ClockDB
 from .utils import db_to_message
-from .config import clock_config
+from .config import DB_PATH, AT_ME
 scheduler = require('nonebot_plugin_apscheduler').scheduler
 from nonebot.adapters.onebot.v11 import Bot, MessageSegment
 
@@ -68,7 +68,7 @@ async def callback(clock: Clock, handle: JobHandle):
         await bot.send_msg(message_type="private",
                            user_id=clock.user_id,message=message)
     elif clock.type == "group":
-        if clock_config.group_at_me:
+        if AT_ME:
             message = MessageSegment.at(clock.user_id) + message
         await bot.send_msg(
             message_type="group",
@@ -79,7 +79,7 @@ async def callback(clock: Clock, handle: JobHandle):
 
 
 job_handle = JobHandle(
-    db = ClockDB(db_path=clock_config.db_path),
+    db = ClockDB(db_path=DB_PATH),
     scheduler = SchedulerAdapter(scheduler),
     callback = callback
 )
