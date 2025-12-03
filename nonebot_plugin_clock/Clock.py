@@ -11,12 +11,12 @@ from .utils import (get_event_info, simple_time_to_cron,
 
 check = on_regex("^(查看闹钟|提醒事项|闹钟|⏰)$" ,block=True) 
 del_clock_qq = on_command('删除闹钟', block=True) 
-add_clock_qq = on_command('添加闹钟', aliases={'设置闹钟',' 添加提醒', '设置提醒'}, block=True) 
+add_clock_qq = on_command('添加闹钟',  aliases={"添加提醒", "添加临时闹钟", "添加临时提醒"}, block=True) 
 enabled_clock_qq = on_command('开启闹钟', aliases={'开启提醒',}, block=True) 
 disabled_clock_qq = on_command('关闭闹钟', aliases={'关闭提醒',}, block=True)
 
 
-ADD_CLOCK_PROMPT = """【时间格式错误】 示例>
+ADD_CLOCK_PROMPT = """ 示例>
 1. 时间: /添加闹钟 21:00
 2. 日期+时间: /添加闹钟 3.7 12:30
 3. N小时、分钟后: /添加闹钟 +3h
@@ -47,7 +47,7 @@ async def _(matcher: Matcher, event: MessageEvent, state: T_State, command: tupl
     
     raw_msg = str(raw_msg)
     if not raw_msg:
-        await matcher.finish("请提供闹钟时间")
+        await matcher.finish("请附带时间" + ADD_CLOCK_PROMPT)
     
     try:
         cron_expr = simple_time_to_cron(raw_msg)
@@ -56,10 +56,10 @@ async def _(matcher: Matcher, event: MessageEvent, state: T_State, command: tupl
         state['type'] = typ
         state['gid'] = gid
         state['uid'] = uid
-        state['is_one_time'] = True if '提醒' in command[0] else False
+        state['is_one_time'] = True if '临时' in command[0] else False
     except ValueError:
         logger.exception("时间解析失败")
-        await matcher.finish(ADD_CLOCK_PROMPT)
+        await matcher.finish("时间解析失败" + ADD_CLOCK_PROMPT)
 
 
 @add_clock_qq.got("content", prompt="请设置闹钟内容(可以发送图片)")
@@ -108,8 +108,8 @@ async def _(matcher: Matcher, event: MessageEvent, ids = CommandArg()):
     try:
         _, gid, uid = get_event_info(event)
         clock = job_handle.list_clock(uid=uid, gid=gid)[int(str(ids))-1]
-        if job_handle.enabled_clock(clock):
-            await matcher.send(message=f'操作完成')
+        job_handle.enabled_clock(clock)
+        await matcher.send(message=f'操作完成')
     except Exception as e:
         logger.error(repr(e))
         await matcher.finish(message=f'出现了问题...')
@@ -119,12 +119,11 @@ async def _(matcher: Matcher, event: MessageEvent, ids = CommandArg()):
 @disabled_clock_qq.handle()
 async def _(matcher: Matcher, event: MessageEvent, ids = CommandArg()):
 
-    
     try:
         _, gid, uid = get_event_info(event)
-        clock = clock = job_handle.list_clock(uid=uid, gid=gid)[int(str(ids))-1]
-        if job_handle.disable_clock(clock):
-            await matcher.send(message=f'操作完成')
+        clock = job_handle.list_clock(uid=uid, gid=gid)[int(str(ids))-1]
+        job_handle.disable_clock(clock)
+        await matcher.send(message=f'操作完成')
     except Exception as e:
         logger.error(repr(e))
         await matcher.finish(message=f'出现了问题...')
