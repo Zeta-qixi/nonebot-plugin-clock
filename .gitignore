@@ -7,6 +7,6 @@ MANIFEST.in
 
 
 dist/
-test.py
-test.ipynb
+test*.py
+test*.ipynb
 .vscode/settings.json

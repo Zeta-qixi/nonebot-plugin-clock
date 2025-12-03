@@ -1,64 +1,130 @@
-import datetime
+from .model import Clock
+from nonebot import on_command, on_regex, logger
+from nonebot.typing import T_State
+from nonebot.matcher import Matcher
+from nonebot.params import CommandArg, Command
+from nonebot.adapters.onebot.v11 import (Message, MessageEvent)
 
-class Clock:
-    def __init__(self, data):
- 
-        self.id = data['id']
-        self.type = data.get('type', 'private')
-        self.user = data.get('user')
-        self.content = data.get('content', '')
-        
-        self.ones = int(data.get('ones', 1))
-        self.month = int(data.get('month', 0))
-        self.day = int(data.get('day', 0))
-        self.week = str(data.get('week', ''))
-        
-        self.time = data.get('time', 1)
-        self.get_time()
+from .handle import job_handle
+from .utils import (get_event_info, simple_time_to_cron, 
+                    message_to_db)
 
-    @classmethod
-    def init_from_db(cls, *args):
-        args = args[0]
-        data = {}
-        data['id'] = args[0]
-        data['type'] = args[1]
-        data['user'] = args[2]
-        data['content'] = args[3]
-        data['month'] = args[4]
-        data['day'] = args[5]
-        data['week'] = args[6]
-        data['time'] = args[7]
-        data['ones'] = args[8]
-        return cls(data)
+check = on_regex("^(查看闹钟|提醒事项|闹钟|⏰)$" ,block=True) 
+del_clock_qq = on_command('删除闹钟', block=True) 
+add_clock_qq = on_command('添加闹钟', aliases={'设置闹钟',' 添加提醒', '设置提醒'}, block=True) 
+enabled_clock_qq = on_command('开启闹钟', aliases={'开启提醒',}, block=True) 
+disabled_clock_qq = on_command('关闭闹钟', aliases={'关闭提醒',}, block=True)
+
+
+ADD_CLOCK_PROMPT = """【时间格式错误】 示例>
+1. 时间: /添加闹钟 21:00
+2. 日期+时间: /添加闹钟 3.7 12:30
+3. N小时、分钟后: /添加闹钟 +3h
+4. cron表达式[5位]: /添加闹钟 30 8 * * *"""
+
+
+
+@check.handle()
+async def _(matcher: Matcher, event: MessageEvent):
+    _, gid, uid = get_event_info(event)
+    clocks = job_handle.list_clock(uid=uid, gid=gid)
+
+    if not clocks:
+        await matcher.finish("目前没有闹钟")
+
+    clock_msg = []
+    for i, clock in enumerate(clocks):
+        info = await clock.get_info()
+        clock_msg.append(f"{i+1}. {info}")
+
+    await matcher.finish(Message("\n".join(clock_msg)))
+
+
+
+@add_clock_qq.handle()
+async def _(matcher: Matcher, event: MessageEvent, state: T_State, command: tuple = Command(), raw_msg: Message = CommandArg()):
+
+    
+    raw_msg = str(raw_msg)
+    if not raw_msg:
+        await matcher.finish("请提供闹钟时间")
+    
+    try:
+        cron_expr = simple_time_to_cron(raw_msg)
+        typ, gid, uid = get_event_info(event)
+        state['cron_expr'] = cron_expr
+        state['type'] = typ
+        state['gid'] = gid
+        state['uid'] = uid
+        state['is_one_time'] = True if '提醒' in command[0] else False
+    except ValueError:
+        logger.exception("时间解析失败")
+        await matcher.finish(ADD_CLOCK_PROMPT)
+
+
+@add_clock_qq.got("content", prompt="请设置闹钟内容(可以发送图片)")
+async def receive_content(matcher: Matcher, state):
+    content = state.get("content")
+    if not content:
+        await matcher.finish("闹钟内容不能为空")
+
+    payload = {
+        "id": 0,
+        "type": state['type'],
+        "group_id": state['gid'],
+        "user_id": state['uid'],
+        "content": message_to_db(content),
+        "cron_expression": state['cron_expr'],
+        "is_one_time": state['is_one_time'],
+    }
+
+    job_handle.add_clock(Clock(payload))
+    await matcher.finish("添加成功")
+
+
+
+
+
+# 删除闹钟
+@del_clock_qq.handle()
+async def _(matcher: Matcher, event: MessageEvent, ids = CommandArg()):
+
+    
+    try:
+        _, gid, uid = get_event_info(event)
+        clock = job_handle.list_clock(uid=uid, gid=gid)[int(str(ids))-1]
+        job_handle.delete_clock(clock)
+        await matcher.send(message=f'操作完成')
+    except Exception as e:
+        logger.error(repr(e))
+        await matcher.finish(message=f'出现了问题...')
     
 
-    def get_info(self):
-        ones=['重复', '不重复']
-        time_ = ' '.join([i for i in self.time.split() if i !='null'])
 
-        if self.month and self.day:
-            tag = f"{self.month}.{self.day}"
-        else:
-            tag = f'每周{self.week}' if self.week else ones[(self.ones)]
-      
-        return f'[{self.id}] ⏰{time_} ({tag})\n备注: {self.content}'
+@enabled_clock_qq.handle()
+async def _(matcher: Matcher, event: MessageEvent, ids = CommandArg()):
 
-
-    def get_time(self):
-        time = self.time.split()[-1].split(':')
-        self.hour = int(time[0])
-        self.minute = int(time[1])
+   
+    try:
+        _, gid, uid = get_event_info(event)
+        clock = job_handle.list_clock(uid=uid, gid=gid)[int(str(ids))-1]
+        if job_handle.enabled_clock(clock):
+            await matcher.send(message=f'操作完成')
+    except Exception as e:
+        logger.error(repr(e))
+        await matcher.finish(message=f'出现了问题...')
+    
 
 
-    def verify_today(self):
+@disabled_clock_qq.handle()
+async def _(matcher: Matcher, event: MessageEvent, ids = CommandArg()):
 
-        if self.week and str(datetime.date.today().weekday()+1) not in self.week:
-            return False
-
-        if self.month > 0 and self.month != datetime.date.today().month:
-            return False
-
-        if self.day > 0 and self.day != datetime.date.today().day:
-            return False
-
-        return True
+    
+    try:
+        _, gid, uid = get_event_info(event)
+        clock = clock = job_handle.list_clock(uid=uid, gid=gid)[int(str(ids))-1]
+        if job_handle.disable_clock(clock):
+            await matcher.send(message=f'操作完成')
+    except Exception as e:
+        logger.error(repr(e))
+        await matcher.finish(message=f'出现了问题...')
