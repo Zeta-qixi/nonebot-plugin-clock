@@ -20,14 +20,19 @@
 1. 安装基础依赖
 ```bash
 pip install nonebot2 nonebot-adapter-onebot
-pip install nonebot2 nonebot-anywhere-llm
+pip install nonebot-anywhere-llm
 pip install nonebot-plugin-apscheduler
 ```
 
-2. 在NoneBot项目中加载插件
+2. 项目clone到NoneBot插件目录
 ```python
 # bot.py
-nonebot.load_plugin('your_plugin_directory')
+cd src
+git@github.com:Zeta-qixi/nonebot-plugin-clock.git
+```
+
+```
+pip install nonebot-plugin-clock
 ```
 
 ## 🎮 使用手册

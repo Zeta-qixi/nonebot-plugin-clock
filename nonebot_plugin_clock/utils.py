@@ -6,11 +6,10 @@ import requests
 from datetime import datetime, timedelta
 from nonebot.adapters.onebot.v11 import MessageEvent, GroupMessageEvent, Message, MessageSegment, PrivateMessageEvent
 from nonebot.adapters.qq import GuildMessageEvent, DirectMessageCreateEvent
-from .llm import decorate_content
 import uuid
 import re
 from datetime import datetime
-from .config import IMAGE_DIR, USE_LLM
+from .config import IMAGE_DIR
 
 if not os.path.exists(IMAGE_DIR):
     os.mkdir(IMAGE_DIR)
@@ -47,8 +46,6 @@ async def db_to_message(content: str, only_show = False):
         if _type == 'image':
             message += MessageSegment.image(Path(data)) # type: ignore
         elif _type == 'text':
-            if not only_show and USE_LLM:
-                data = await decorate_content(data) 
             message += Message(data)
     
     return message
