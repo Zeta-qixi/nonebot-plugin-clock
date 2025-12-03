@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nonebot-plugin-clock"
-version = "1.0.1"
+version = "1.1.0"
 authors = ["Zeta-qixi <1019289695@qq.com>"]
 description = "Nonebot2 plugin for using llm"
 readme = "README.md"
@@ -11,9 +11,9 @@ homepage = "https://github.com/Zeta-qixi/nonebot-plugin-clock"
 python = "^3.10"
 nonebot2 = "^2.4.1"
 nonebot-adapter-onebot="^2.4.3"
-nonebot-plugin-localstore="^0.7.4"
-nonebot-plugin-apschedule="^0.2.0"
-nonebot-plugin-anywhere-llm="^1.1.6"
+nonebot-plugin-localstore="*"
+nonebot-plugin-apscheduler="*"
+nonebot-plugin-anywhere-llm="*"
 
 [tool.nonebot]
 adapters = [
@@ -23,3 +23,4 @@ adapters = [
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
