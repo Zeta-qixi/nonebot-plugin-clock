@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nonebot-plugin-clock"
-version = "1.1.5"
+version = "1.1.6"
 authors = ["Zeta-qixi <1019289695@qq.com>"]
 description = "Nonebot2 plugin for using llm"
 readme = "README.md"
@@ -11,6 +11,7 @@ homepage = "https://github.com/Zeta-qixi/nonebot-plugin-clock"
 python = "^3.10"
 nonebot2 = "^2.4.1"
 nonebot-adapter-onebot="^2.4.3"
+nonebot-adapter-qq="*"
 nonebot-plugin-localstore="*"
 nonebot-plugin-apscheduler="*"
 requests="*"
